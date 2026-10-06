@@ -1,0 +1,154 @@
+---
+title: "volunteers_analysis"
+author: "Ama"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+This is an analysis of the Operations data of a volunteering activities in a Non-profit.
+
+We are tasked to determine the contributing factors of delays in execution of tasks and suggest remedies.Also teams that are efficient would need to be rewarded and hailed to encourage more efficiency
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Install packages required
+```{r mtcars}
+
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+```
+
+
+## Get dataset into R: CSV and TSV
+```{r}
+ops_data <- read_csv("data/operations_data.csv")
+
+
+```
+
+
+## 1. Explore the ops_data set
+```{r}
+
+names(ops_data) # column names
+str(ops_data) # shows structure of the columns in  dataset  
+visdat::vis_dat(ops_data) # checks the data types visually
+dim(ops_data) #shows the size of the ops_data set
+summary(ops_data) # shows summary statistics of the dataset  
+
+unique(ops_data$volunteer_id) # check whether values in this column are unique
+
+```
+Observation:
+1. The ops_data set has information about volunteers. The dataset has 7 columns and 100 records.
+2. The volunteer_id has unique records of each volunteers identification
+2. There is 1 character column and 6 numeric columns
+
+
+## 2. Viewing the distribution of the numeric columns
+```{r}
+
+hist(ops_data$recruitment_days)
+hist(ops_data$onboarding_days)
+hist(ops_data$tasks_assigned)
+hist(ops_data$tasks_completed)
+hist(ops_data$project_delay_days)
+
+
+unique(ops_data$team)
+View(ops_data)
+
+```
+
+
+
+## 3. Cleaning and Data Wrangling
+```{r}
+visdat::vis_miss(ops_data) # checks for missing values
+
+ 
+ops_data_max <- ops_data %>%
+select(-volunteer_id) %>% 
+group_by(team) %>% 
+summarise(max_recruitment=max(recruitment_days),max_onboarding=max(onboarding_days),
+max_tasks_assigned=max(tasks_assigned), max_tasks_completed=max(tasks_completed),  max_project_delay_days=max(project_delay_days))
+
+
+ops_data_min <- ops_data %>%
+select(-volunteer_id) %>% 
+group_by(team) %>% 
+summarise(min_recruitment=min(recruitment_days), min_onboarding=min(onboarding_days),
+min_tasks_assigned=min(tasks_assigned), min_tasks_completed=min(tasks_completed), min_project_delay_days= min(project_delay_days))
+
+write_csv(ops_data, "my_new_data.csv")
+
+```
+Observation:
+1. There are no missing values
+2. 
+
+
+## 4. Analysis and Insights
+```{r}
+
+ops_data_avg <- ops_data %>%
+select(-volunteer_id) %>% 
+group_by(team) %>% 
+summarise(avg_recruitment=mean(recruitment_days), avg_onboarding=mean(onboarding_days),
+avg_tasks_assigned=mean(tasks_assigned), avg_tasks_completed=mean(tasks_completed),  avg_project_delay_days= mean(project_delay_days))
+```
+
+
+
+## 5. Including Plots and visualisations
+Embedding Bar plot showing the average number of days for Team
+```{r pressure, echo=FALSE}
+ops_data_long <- ops_data_avg %>%
+  pivot_longer(
+    cols = c(
+      avg_recruitment,
+      avg_onboarding,
+      avg_tasks_assigned,
+      avg_tasks_completed,
+      avg_project_delay_days
+    ),
+    names_to = "metric",
+    values_to = "average"
+  )
+
+ggplot(ops_data_long, aes(x = team, y = average, fill = team)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ metric, scales = "free_y") +
+  labs(
+    title = "Average Performance by Team",
+    x = "Team",
+    y = "Average",
+    fill = "Team"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "HR" = "steelblue",
+      "Operations" = "orange",
+      "Programs" = "forestgreen"
+    )
+  ) +
+  theme_minimal()
+  
+
+```
+
+
+## 6.
+
+```{r}
+
+```
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
